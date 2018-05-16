@@ -7,6 +7,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from keras.utils import to_categorical
 from sklearn.decomposition import PCA
+from matplotlib import pyplot as plt
 from sklearn import preprocessing
 from sklearn.manifold import TSNE
 from numpy import array
@@ -111,6 +112,7 @@ df_train_non_genetic_non_numerical_vectorized = df_train_non_genetic_non_numeric
 
 #merging all together
 df_train_non_genetic_pre_processed = pd.merge( df_train_non_genetic_numerical_scaled, df_train_non_genetic_non_numerical_vectorized, left_index=True, right_index=True, how='outer')
+
 
 
 # ~ Sampling each classes
@@ -322,4 +324,30 @@ with open('./BRCA_test.predict','w') as outfile:
     encoded_test.to_string(outfile)
 
 
+
+#######################
+###   ~ Data Viz ~  ###
+#######################
+
+
+df_train_both = pd.merge(df_train_genetic_scaled , df_train_non_genetic_pre_processed, left_index=True, right_index=True, how='outer')
+df_train_both_with_target = pd.merge( df_train_both, df_solution, left_index=True, right_index=True, how='outer')
+
+
+#Applying t-SNE to vizualize data
+tsne = TSNE(n_components=3, verbose=1, perplexity=40, n_iter=300)
+x = df_train_both.values
+x_tsne = tsne.fit_transform(x)
+
+df_tsne = pd.DataFrame()
+df_tsne['x-tsne'] = x_tsne[:,0]
+df_tsne['y-tsne'] = x_tsne[:,1]
+df_tsne['label'] = df_solution.values
+
+
+chart = ggplot( df_tsne, aes(x='x-tsne', y='y-tsne', color='label') ) \
+        + geom_point(size=70,alpha=0.1) \
+        + ggtitle("tSNE dimensions colored by cancer stage")
+
+print(chart)
 
